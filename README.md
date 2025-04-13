@@ -6,7 +6,6 @@ This repository implements a fully distributed CLIP embedding + FAISS ANN search
 
 - **scripts/**: Embedding, indexing, search logic
 - **infra/**: Infrastructure setup using Terraform + Ansible
-- **beegfs🐝/**: Runtime data (not included in repo)
 
 ## How to Use
 
