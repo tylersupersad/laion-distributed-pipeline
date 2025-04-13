@@ -1,0 +1,19 @@
+- name: Set Hostnames for All Nodes
+  hosts: all
+  become: true
+  become_user: root
+
+  tasks:
+    # set hostname for hostnode
+    - name: Set Hostname on Hostnode
+      ansible.builtin.hostname:
+        name: hostnode
+        use: systemd
+      when: "'hostnode' in group_names"
+
+    # set dynamic hostname on each worker node (e.g., workernode1, workernode2, ...)
+    - name: Set Hostname on Workers
+      ansible.builtin.hostname:
+        name: "workernode{{ lookup('ansible.utils.index_of', groups['workers'], 'eq', inventory_hostname) + 1 }}"
+        use: systemd
+      when: "'workers' in group_names"

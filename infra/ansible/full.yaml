@@ -1,0 +1,11 @@
+- import_playbook: update-reboot.yaml
+- import_playbook: bootstrap.yaml
+- import_playbook: set-hostnames.yaml
+- import_playbook: ssh-keydist.yaml
+- import_playbook: munge-keydist.yaml
+- import_playbook: slurm-controller.yaml
+- import_playbook: beegfs-pkgs.yaml
+- import_playbook: beegfs-host.yaml
+- import_playbook: beegfs-storage.yaml
+- import_playbook: beegfs-client.yaml
+- import_playbook: beegfs-links.yaml

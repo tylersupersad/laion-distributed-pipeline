@@ -1,0 +1,91 @@
+- name: Generate and Fetch Munge Key on Hostnode
+  hosts: hostnode
+  become: true
+  become_user: root
+
+  tasks:
+    # install munge to ensure keygen + directory + user exist
+    - name: Install Munge Package
+      ansible.builtin.dnf:
+        name: munge
+        state: present
+
+    # make sure /etc/munge exists and has correct permissions
+    - name: Ensure /etc/munge Directory Exists
+      ansible.builtin.file:
+        path: /etc/munge
+        state: directory
+        owner: munge
+        group: munge
+        mode: "0755"
+
+    # delete any existing key
+    - name: Delete Existing Munge Key
+      ansible.builtin.file:
+        path: /etc/munge/munge.key
+        state: absent
+
+    # generate a new random munge key
+    - name: Generate New Munge Key
+      ansible.builtin.command: /usr/bin/uuidgen -r
+      register: munge_key_output
+
+    # write the generated key into the munge key file
+    - name: Write Munge Key to File
+      ansible.builtin.copy:
+        content: "{{ munge_key_output.stdout }}"
+        dest: /etc/munge/munge.key
+        owner: munge
+        group: munge
+        mode: "0400"
+
+    # fetch the key to the controller so it can be shared
+    - name: Fetch Munge Key to Controller
+      ansible.builtin.fetch:
+        src: /etc/munge/munge.key
+        dest: ./.generated/munge/
+        flat: true
+
+    # start and enable the munge service
+    - name: Start Munge on Hostnode
+      ansible.builtin.systemd_service:
+        name: munge
+        state: started
+        enabled: true
+
+- name: Distribute Munge Key to Workers
+  hosts: workers
+  become: true
+  become_user: root
+
+  tasks:
+    # install munge on workers too
+    - name: Install Munge Package
+      ansible.builtin.dnf:
+        name: munge
+        state: present
+
+    # make sure the directory exists on workers
+    - name: Ensure /etc/munge Directory Exists
+      ansible.builtin.file:
+        path: /etc/munge
+        state: directory
+        owner: munge
+        group: munge
+        mode: "0755"
+
+    # copy the fetched key to each worker
+    - name: Copy Munge Key to Worker
+      ansible.builtin.copy:
+        src: ./.generated/munge/munge.key
+        dest: /etc/munge/munge.key
+        owner: munge
+        group: munge
+        mode: "0400"
+
+    # start and enable the munge service on workers
+    - name: Start Munge on Worker
+      ansible.builtin.systemd_service:
+        name: munge
+        state: started
+        enabled: true

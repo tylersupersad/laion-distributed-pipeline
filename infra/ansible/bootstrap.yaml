@@ -1,0 +1,73 @@
+- name: Install Essential Tools, Compilers, and User Config Files
+  hosts: all
+  become: true
+  become_user: root
+  tasks:
+    # install basic cli tools, editors, compilers, and python dev tools
+    - name: Install Quality of Life Tools and Development Packages
+      ansible.builtin.dnf:
+        name:
+          - glibc-langpack-en
+          - vim
+          - emacs
+          - nano
+          - screen
+          - tmux
+          - net-tools
+          - bind-utils
+          - htop
+          - git
+          - python3-devel
+          - python3-pip
+          - python3-virtualenv
+          - g++
+          - gfortran
+          - openmpi
+          - openmpi-devel
+          - patch
+        state: present
+
+    # copy ssh config to suppress host key checking and unify behavior
+    - name: Copy SSH Config
+      ansible.builtin.copy:
+        src: ./files/ssh_config
+        dest: /home/almalinux/.ssh/config
+        owner: almalinux
+        group: almalinux
+        mode: "0600"
+
+    # create .openmpi config directory for user
+    - name: Create OpenMPI Config Directory
+      ansible.builtin.file:
+        path: /home/almalinux/.openmpi
+        state: directory
+        owner: almalinux
+        group: almalinux
+        mode: "0755"
+
+    # copy openmpi tuning config
+    - name: Copy mca-params.conf
+      ansible.builtin.copy:
+        src: ./files/mca-params.conf
+        dest: /home/almalinux/.openmpi/mca-params.conf
+        owner: almalinux
+        group: almalinux
+        mode: "0644"
+
+    # append openmpi path export to .bashrc
+    - name: Add OpenMPI to PATH in .bashrc
+      ansible.builtin.lineinfile:
+        path: /home/almalinux/.bashrc
+        line: "export PATH=/usr/lib64/openmpi/bin:$PATH"
+        insertafter: EOF
+        state: present
+        owner: almalinux
+        group: almalinux
+
+    # copy hostfile.j2 to /etc/hosts for hostname resolution
+    - name: Distribute Host File for Name Resolution
+      ansible.builtin.template:
+        src: files/hostfile.j2
+        dest: /etc/hosts
+      become: true
+      become_user: root

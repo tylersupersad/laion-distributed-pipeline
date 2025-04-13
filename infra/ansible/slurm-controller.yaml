@@ -1,0 +1,27 @@
+- name: Configure Slurm Controller on Hostnode
+  hosts: hostnode
+  become: true
+  become_user: root
+  tasks:
+    # create a shared config directory for slurm on beegfs
+    - name: Create Slurm Config Directory on BeeGFS
+      ansible.builtin.file:
+        path: /beegfs/config
+        state: directory
+        mode: "0755"
+        owner: root
+        group: root
+
+    # generate slurm.conf from template and place it in beegfs config dir
+    - name: Generate slurm.conf from Template
+      ansible.builtin.template:
+        src: files/slurm.conf.j2
+        dest: /beegfs/config/slurm.conf
+        mode: "0644"
+
+    # remove any default slurm.conf from the local etc directory
+    - name: Remove Default slurm.conf if Present
+      ansible.builtin.file:
+        path: /etc/slurm/slurm.conf
+        state: absent
+        force: true

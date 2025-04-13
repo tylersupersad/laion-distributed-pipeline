@@ -1,0 +1,69 @@
+- name: BeeGFS Common Configuration
+  hosts: workers:hostnode 
+  become: true
+  become_user: root
+  tasks:
+    # create the beegfs mount point directory
+    - name: Create Mount Location
+      ansible.builtin.file:
+        path: /beegfs
+        state: directory
+
+    # run beegfs client setup to connect to management daemon
+    - name: Configure Client
+      ansible.builtin.command:
+        cmd: /opt/beegfs/sbin/beegfs-setup-client -m hostnode
+
+    # copy the shared connauthfile to all nodes
+    - name: Auth File
+      ansible.builtin.copy:
+        src: ./.generated/connauthfile
+        dest: /etc/beegfs/connauthfile
+        owner: root
+        group: root
+        mode: 400
+
+    # copy the beegfs mounts configuration file to all nodes
+    - name: Mounts File
+      ansible.builtin.copy:
+        src: files/beegfs-mounts.conf
+        dest: /etc/beegfs/beegfs-mounts.conf
+        owner: root
+        group: root
+
+    # patch the helper daemon config to include the path to the connauthfile
+    - name: Fix Helperconf
+      ansible.builtin.replace:
+        path: /etc/beegfs/beegfs-helperd.conf
+        regexp: 'connAuthFile[ \t]+='
+        replace: 'connAuthFile=/etc/beegfs/connauthfile'
+
+    # patch the client config to include the path to the connauthfile
+    - name: Fix Client Conf
+      ansible.builtin.replace:
+        path: /etc/beegfs/beegfs-client.conf
+        regexp: 'connAuthFile[ \t]+='
+        replace: 'connAuthFile=/etc/beegfs/connauthfile'
+
+    # enable and start the beegfs helper daemon
+    - name: Start Helperd
+      ansible.builtin.systemd_service:
+        name: beegfs-helperd
+        state: started
+        enabled: true
+
+    # enable and start the beegfs client
+    - name: Start Client
+      ansible.builtin.systemd_service:
+        name: beegfs-client
+        state: started
+        enabled: true
+
+    # mount the beegfs filesystem on /beegfs across all nodes
+    - name: Mount BeeGFS on Hostnode and Workers
+      ansible.builtin.mount:
+        path: /beegfs
+        src: "beegfs:/beegfs"
+        fstype: beegfs
+        opts: defaults
+        state: mounted

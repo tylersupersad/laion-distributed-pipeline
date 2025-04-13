@@ -1,0 +1,64 @@
+- name: Generate and Distribute Shared SSH Keys for Passwordless Access
+  hosts: hostnode
+  become: true
+  become_user: almalinux
+
+  tasks:
+    # remove any existing keys before generating new ones
+    - name: Remove Existing Private SSH Key
+      ansible.builtin.file:
+        path: /home/almalinux/.ssh/id_ed25519
+        state: absent
+
+    - name: Remove Existing Public SSH Key
+      ansible.builtin.file:
+        path: /home/almalinux/.ssh/id_ed25519.pub
+        state: absent
+
+    # generate a new ed25519 ssh key pair without a passphrase
+    - name: Generate SSH Key
+      ansible.builtin.shell: ssh-keygen -q -t ed25519 -f /home/almalinux/.ssh/id_ed25519 -C "" -N ""
+
+    # add public key to authorized_keys to allow self-login
+    - name: Add Public Key to authorized_keys
+      ansible.builtin.shell: cat /home/almalinux/.ssh/id_ed25519.pub >> /home/almalinux/.ssh/authorized_keys
+
+    # fetch both keys to local machine temporarily
+    - name: Fetch Private Key
+      ansible.builtin.fetch:
+        src: /home/almalinux/.ssh/id_ed25519
+        dest: ./.generated/temp_id_ed25519/
+        flat: true
+
+    - name: Fetch Public Key
+      ansible.builtin.fetch:
+        src: /home/almalinux/.ssh/id_ed25519.pub
+        dest: ./.generated/temp_id_ed25519/
+        flat: true
+
+- name: Distribute SSH Keys to Workers
+  hosts: workers
+  become: true
+  become_user: almalinux
+
+  tasks:
+    # copy private and public keys to each worker
+    - name: Copy Private Key
+      ansible.builtin.copy:
+        src: ./.generated/temp_id_ed25519/id_ed25519
+        dest: /home/almalinux/.ssh/id_ed25519
+        owner: almalinux
+        group: almalinux
+        mode: "0600"
+
+    - name: Copy Public Key
+      ansible.builtin.copy:
+        src: ./.generated/temp_id_ed25519/id_ed25519.pub
+        dest: /home/almalinux/.ssh/id_ed25519.pub
+        owner: almalinux
+        group: almalinux
+        mode: "0644"
+
+    # authorize login from host
+    - name: Add Public Key to authorized_keys
+      ansible.builtin.shell: cat /home/almalinux/.ssh/id_ed25519.pub >> /home/almalinux/.ssh/authorized_keys

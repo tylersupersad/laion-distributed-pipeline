@@ -1,0 +1,18 @@
+- name: Set-up BeeGFS Links
+  hosts: workers:hostnode 
+  become: true
+  become_user: root
+  tasks:
+    # create a user-specific directory on the beegfs mount
+    - name: Make User Directory
+      ansible.builtin.file:
+        path: /beegfs/almalinux
+        state: directory
+        owner: almalinux
+
+    # create a symbolic link in the user's home directory pointing to their beegfs dir
+    - name: Create Home Directory Sym-link
+      ansible.builtin.file:
+        src: /beegfs/almalinux
+        dest: "/home/almalinux/beegfs🐝"
+        state: link
