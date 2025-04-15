@@ -1,7 +1,0 @@
-- name: submit test embedding job
-  hosts: loginnode
-  tasks:
-    - name: submit dynamic test array job
-      ansible.builtin.shell: |
-        cd /home/almalinux/beegfs🐝/scripts
-        sbatch embed_test_array.slurm
