@@ -1,0 +1,132 @@
+- name: Install and Configure Monitoring Stack
+  hosts: all
+  become: yes
+
+  vars:
+    prometheus_config_path: /etc/prometheus/prometheus.yml                     # prometheus config file path
+    prometheus_service_path: /etc/systemd/system/prometheus.service            # prometheus systemd service path
+    node_exporter_service_path: /etc/systemd/system/node_exporter.service      # node_exporter systemd service path
+
+  tasks:
+    # install required tools on debian-based systems
+    - name: Install Dependencies
+      apt:
+        name:
+          - wget
+          - tar
+        state: present
+      when: ansible_os_family == "Debian"
+
+    # create prometheus user without login or home
+    - name: Create Prometheus User
+      user:
+        name: prometheus
+        shell: /sbin/nologin
+        system: yes
+        create_home: no
+
+    # create node_exporter user without login or home
+    - name: Create node_exporter User
+      user:
+        name: node_exporter
+        shell: /sbin/nologin
+        system: yes
+        create_home: no
+
+    # create required prometheus directories
+    - name: Create Prometheus Directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: prometheus
+        group: prometheus
+        mode: '0755'
+      loop:
+        - /etc/prometheus
+        - /var/lib/prometheus
+
+    # download prometheus release tarball
+    - name: Download and Install Prometheus
+      get_url:
+        url: https://github.com/prometheus/prometheus/releases/download/v2.52.0/prometheus-2.52.0.linux-amd64.tar.gz
+        dest: /tmp/prometheus.tar.gz
+        mode: '0644'
+
+    # extract prometheus tarball
+    - name: Extract Prometheus
+      unarchive:
+        src: /tmp/prometheus.tar.gz
+        dest: /tmp/
+        remote_src: yes
+
+    # copy prometheus and promtool binaries to /usr/local/bin
+    - name: Copy Prometheus Binaries
+      copy:
+        remote_src: yes
+        src: "/tmp/prometheus-2.52.0.linux-amd64/{{ item }}"
+        dest: "/usr/local/bin/{{ item }}"
+        mode: '0755'
+      loop:
+        - prometheus
+        - promtool
+
+    # deploy prometheus configuration file from jinja2 template
+    - name: Copy Prometheus Config Template
+      template:
+        src: templates/prometheus.yml.j2
+        dest: "{{ prometheus_config_path }}"
+        owner: prometheus
+        group: prometheus
+        mode: '0644'
+
+    # copy prometheus systemd service definition
+    - name: Copy Prometheus systemd Service File
+      copy:
+        src: files/prometheus.service
+        dest: "{{ prometheus_service_path }}"
+        mode: '0644'
+
+    # enable and start prometheus via systemd
+    - name: Enable and Start Prometheus
+      systemd:
+        name: prometheus
+        daemon_reload: yes
+        enabled: yes
+        state: started
+
+    # download node_exporter release tarball
+    - name: Download and Install node_exporter
+      get_url:
+        url: https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz
+        dest: /tmp/node_exporter.tar.gz
+        mode: '0644'
+
+    # extract node_exporter tarball
+    - name: Extract node_exporter
+      unarchive:
+        src: /tmp/node_exporter.tar.gz
+        dest: /tmp/
+        remote_src: yes
+
+    # copy node_exporter binary to /usr/local/bin
+    - name: Copy node_exporter Binary
+      copy:
+        remote_src: yes
+        src: /tmp/node_exporter-1.7.0.linux-amd64/node_exporter
+        dest: /usr/local/bin/node_exporter
+        mode: '0755'
+
+    # copy node_exporter systemd service definition
+    - name: Copy node_exporter systemd Service File
+      copy:
+        src: files/node_exporter.service
+        dest: "{{ node_exporter_service_path }}"
+        mode: '0644'
+
+    # enable and start node_exporter via systemd
+    - name: Enable and Start node_exporter
+      systemd:
+        name: node_exporter
+        daemon_reload: yes
+        enabled: yes
+        state: started
