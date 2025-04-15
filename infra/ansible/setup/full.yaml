@@ -1,0 +1,29 @@
+# update and reboot all nodes to ensure latest packages
+- import_playbook: update-reboot.yaml
+
+# install base dependencies and common packages
+- import_playbook: bootstrap.yaml
+
+# assign static hostnames to all nodes
+- import_playbook: set-hostnames.yaml
+
+# distribute ssh keys for passwordless access
+- import_playbook: ssh-keydist.yaml
+
+# distribute munge key for slurm authentication
+- import_playbook: munge-keydist.yaml
+
+# configure and export nfs share on hostnode
+- import_playbook: nfs-host.yaml
+
+# mount nfs share on all worker nodes
+- import_playbook: nfs-worker.yaml
+
+# configure slurm controller on hostnode
+- import_playbook: slurm-host.yaml
+
+# configure slurm worker daemons
+- import_playbook: slurm-worker.yaml
+
+# download laion dataset to nfs storage
+- import_playbook: laion-download.yaml

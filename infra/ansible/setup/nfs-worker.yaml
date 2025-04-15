@@ -1,0 +1,27 @@
+- name: NFS Client Configuration
+  hosts: workers
+  become: true
+
+  tasks:
+    # ensure the local mount point directory exists
+    - name: Ensure /nfs Directory Exists
+      ansible.builtin.file:
+        path: /nfs
+        state: directory
+
+    # mount the nfs share from the hostnode
+    - name: Mount NFS Share
+      ansible.posix.mount:
+        path: /nfs
+        src: "{{ groups['hostnode'][0] }}:/nfs"
+        fstype: nfs
+        opts: defaults,_netdev
+        state: mounted
+        boot: true
+
+    # create symlink from mounted nfs to user's home
+    - name: Create Sym-link to NFS Home Directory
+      ansible.builtin.file:
+        src: /nfs/almalinux
+        dest: /home/almalinux/nfs
+        state: link

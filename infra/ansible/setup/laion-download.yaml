@@ -1,0 +1,50 @@
+- name: Download LAION Dataset to NFS Storage
+  hosts: workers
+  become: true
+  vars:
+    laion_dir: "/home/almalinux/nfs/laion"
+    hf_token: "{{ lookup('env', 'HF_TOKEN') }}"
+
+  tasks:
+    # install system packages needed for download and python tools
+    - name: Install System Dependencies
+      ansible.builtin.package:
+        name:
+          - wget
+          - python3-pip
+        state: present
+
+    # install required python packages for dataset handling and CLIP
+    - name: Install Required Python Packages
+      pip:
+        name:
+          - huggingface_hub
+          - img2dataset
+          - torch
+          - torchvision
+          - faiss-cpu
+          - git+https://github.com/openai/CLIP.git
+        state: present
+
+    # create directory on nfs to store laion dataset
+    - name: Create LAION Data Directory on NFS
+      ansible.builtin.file:
+        path: "{{ laion_dir }}"
+        state: directory
+        mode: '0755'
+
+    # download laion parquet files (only once across all workers)
+    - name: Download LAION Dataset Files If Not Already Present
+      run_once: true
+      ansible.builtin.shell: |
+        for i in {0..9}; do
+          fname="part-0000${i}-cad4a140-cebd-46fa-b874-e8968f93e32e-c000.snappy.parquet"
+          url="https://huggingface.co/datasets/laion/laion2B-en-aesthetic/resolve/main/$fname"
+          if [ ! -f "{{ laion_dir }}/$fname" ]; then
+            wget --header="Authorization: Bearer {{ hf_token }}" "$url" -P "{{ laion_dir }}"
+          fi
+        done
+      args:
+        executable: /bin/bash
+      environment:
+        HF_TOKEN: "{{ hf_token }}"

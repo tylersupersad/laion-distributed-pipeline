@@ -1,0 +1,48 @@
+- name: Configure Slurm Controller on Hostnode
+  hosts: hostnode
+  become: true
+  become_user: root
+
+  tasks:
+    # install slurm controller packages
+    - name: Install slurmctld and Dependencies
+      ansible.builtin.dnf:
+        name:
+          - slurm
+          - slurm-slurmctld
+          - slurm-slurmd
+        state: present
+
+    # create shared config directory under /nfs
+    - name: Create /nfs/config Directory
+      ansible.builtin.file:
+        path: /nfs/config
+        state: directory
+        mode: "0755"
+
+    # deploy slurm.conf from template to shared config
+    - name: Deploy slurm.conf to /nfs/config
+      ansible.builtin.template:
+        src: files/slurm.conf.j2
+        dest: /nfs/config/slurm.conf
+        mode: "0644"
+
+    # remove any existing local slurm.conf
+    - name: Delete Default /etc/slurm/slurm.conf
+      ansible.builtin.file:
+        path: /etc/slurm/slurm.conf
+        state: absent
+
+    # create symlink to shared slurm.conf
+    - name: Sym-link Shared slurm.conf
+      ansible.builtin.file:
+        src: /nfs/config/slurm.conf
+        dest: /etc/slurm/slurm.conf
+        state: link
+
+    # start and enable slurm controller service
+    - name: Start and Enable slurmctld
+      ansible.builtin.systemd_service:
+        name: slurmctld
+        state: started
+        enabled: true

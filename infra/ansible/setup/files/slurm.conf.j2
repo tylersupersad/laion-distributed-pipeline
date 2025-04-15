@@ -33,7 +33,7 @@ SlurmdDebug=info
 SlurmdLogFile=/var/log/slurm/slurmd.log
 
 # COMPUTE NODES
-NodeName=workernode[1-{{ groups["workers"] | count }}] CPUs=2 State=UNKNOWN
+NodeName=workernode[1-{{ groups["workers"] | count }}] CPUs=4 RealMemory=30000 State=UNKNOWN
 
 PartitionName=debug Nodes=ALL Default=NO MaxTime=INFINITE State=UP
 PartitionName=batch Nodes=ALL Default=YES MaxTime=INFINITE State=UP
