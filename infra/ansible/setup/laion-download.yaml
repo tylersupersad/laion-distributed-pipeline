@@ -37,11 +37,11 @@
     - name: Download LAION Dataset Files If Not Already Present
       run_once: true
       ansible.builtin.shell: |
-        for i in {0..9}; do
-          fname="part-0000${i}-cad4a140-cebd-46fa-b874-e8968f93e32e-c000.snappy.parquet"
+        for i in $(seq -w 0 23); do
+          fname="part-000${i}-cad4a140-cebd-46fa-b874-e8968f93e32e-c000.snappy.parquet"
           url="https://huggingface.co/datasets/laion/laion2B-en-aesthetic/resolve/main/$fname"
           if [ ! -f "{{ laion_dir }}/$fname" ]; then
-            wget --header="Authorization: Bearer {{ hf_token }}" "$url" -P "{{ laion_dir }}"
+            wget --tries=5 --timeout=10 --header="Authorization: Bearer {{ hf_token }}" "$url" -P "{{ laion_dir }}"
           fi
         done
       args:
