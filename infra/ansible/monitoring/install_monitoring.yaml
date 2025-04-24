@@ -73,7 +73,7 @@
     # deploy prometheus configuration file from jinja2 template
     - name: Copy Prometheus Config Template
       template:
-        src: templates/prometheus.yml.j2
+        src: ../ansible/monitoring/templates/prometheus.yml.j2
         dest: "{{ prometheus_config_path }}"
         owner: prometheus
         group: prometheus
@@ -82,7 +82,7 @@
     # copy prometheus systemd service definition
     - name: Copy Prometheus systemd Service File
       copy:
-        src: files/prometheus.service
+        src: ../ansible/monitoring/files/prometheus.service
         dest: "{{ prometheus_service_path }}"
         mode: '0644'
 

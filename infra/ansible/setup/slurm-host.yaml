@@ -23,7 +23,7 @@
     # deploy slurm.conf from template to shared config
     - name: Deploy slurm.conf to /nfs/config
       ansible.builtin.template:
-        src: files/slurm.conf.j2
+        src: ../ansible/setup/files/slurm.conf.j2
         dest: /nfs/config/slurm.conf
         mode: "0644"
 
