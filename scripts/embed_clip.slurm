@@ -6,7 +6,7 @@
 #SBATCH --ntasks=1                                      
 #SBATCH --cpus-per-task=4                          
 #SBATCH --mem=28G                                     
-#SBATCH --time=24:00:00                                   
+#SBATCH --time=28:00:00                                   
 
 # define base paths for data, logs, and scripts
 base="/home/almalinux/nfs"
@@ -32,5 +32,5 @@ python3 "$embed_script" \
     --parquet_dir "$input_dir" \
     --output_dir "$output_dir" \
     --output_prefix "clip_embeddings" \
-    --sample_count 4000 \
+    --sample_count 16000 \
     --batch_size 64
