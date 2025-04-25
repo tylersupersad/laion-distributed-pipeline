@@ -27,3 +27,6 @@
 
 # download laion dataset to nfs storage
 - import_playbook: laion-download.yaml
+
+# copy the scripts directory to nfs storage
+- import_playbook: copy-scripts-to-nfs.yaml
