@@ -1,0 +1,44 @@
+- name: Copy Local Scripts Directory to NFS Storage on Hostnode
+  hosts: hostnode
+  become: true
+
+  vars:
+    local_scripts_dir: "{{ playbook_dir }}/../../../scripts"
+    remote_scripts_dir: "/home/almalinux/nfs/scripts"
+
+  tasks:
+    # ensure rsync is installed for synchronize module
+    - name: Install rsync
+      ansible.builtin.dnf:
+        name: rsync
+        state: present
+
+    # ensure destination directory exists
+    - name: Ensure Scripts Directory Exists on NFS
+      ansible.builtin.file:
+        path: "{{ remote_scripts_dir }}"
+        state: directory
+        mode: '0755'
+        owner: almalinux
+        group: almalinux
+
+    # sync local scripts to NFS using rsync
+    - name: Copy Local Scripts to NFS
+      ansible.builtin.synchronize:
+        src: "{{ local_scripts_dir }}/"
+        dest: "{{ remote_scripts_dir }}/"
+        recursive: yes
+        delete: no
+
+    # list files after sync
+    - name: List Contents of NFS Scripts Directory
+      ansible.builtin.shell: ls -1 {{ remote_scripts_dir }}
+      register: script_list
+
+    - name: Show Copied Script Files
+      ansible.builtin.debug:
+        msg: |
+          Copied scripts to: {{ remote_scripts_dir }}
+          Files:
+          {{ script_list.stdout_lines | map('regex_replace', '^', '  - ') | join('\n') }}
+

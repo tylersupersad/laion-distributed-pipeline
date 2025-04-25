@@ -13,7 +13,7 @@
   # generate /etc/exports from jinja2 template
   - name: Create Exports File
     template:
-      src: ../ansible/setup/files/exports.j2
+      src: files/exports.j2
       dest: /etc/exports
       mode: "0644"
 

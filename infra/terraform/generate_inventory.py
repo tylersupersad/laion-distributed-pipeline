@@ -5,9 +5,10 @@ import subprocess
 import argparse
 
 def run(command):
-    result = subprocess.run(command, capture_output=True, encoding='UTF-8')
+    terraform_dir = "/home/almalinux/laion-distributed-pipeline/infra/terraform"
+    result = subprocess.run(command, capture_output=True, encoding='UTF-8', cwd=terraform_dir)
     if result.returncode != 0:
-        print(f"Error executing command: {command}")
+        print(f"Error executing command: {' '.join(command)}")
         print(result.stderr)
         return None
     return result.stdout
