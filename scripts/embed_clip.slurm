@@ -6,7 +6,7 @@
 #SBATCH --ntasks=1                                      
 #SBATCH --cpus-per-task=4                          
 #SBATCH --mem=28G                                     
-#SBATCH --time=28:00:00                                   
+#SBATCH --time=30:00:00                                   
 
 # define base paths for data, logs, and scripts
 base="/home/almalinux/nfs"
