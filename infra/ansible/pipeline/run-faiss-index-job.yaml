@@ -1,0 +1,41 @@
+# submit faiss index build job on hostnode
+- name: Submit Faiss Index Build Job on Hostnode
+  hosts: hostnode
+  become: false
+
+  tasks:
+    # create logs directories if they don't exist
+    - name: Ensure Logs Directories Exist
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - /home/almalinux/nfs/logs/faiss
+        - /home/almalinux/nfs/logs/slurm
+
+    # count number of embedding parquet files ready for faiss
+    - name: Count Faiss-ready Embedding Parquet Files
+      shell: "ls -1 /home/almalinux/nfs/outputs/clip_embeddings*.parquet 2>/dev/null | wc -l"
+      register: num_faiss_parquet
+
+    # fail early if no embedding parquet files are found
+    - name: Fail If No Embedding Files Found
+      fail:
+        msg: "No embedding parquet files found in /home/almalinux/nfs/outputs"
+      when: num_faiss_parquet.stdout | int == 0
+
+    # submit slurm array job to build faiss index (limit 4 concurrent tasks)
+    - name: Submit Faiss Slurm Job with Dynamic Array Size
+      shell: |
+        sbatch --array=0-{{ num_faiss_parquet.stdout | int - 1 }}%4 \
+               --job-name=faiss_build_array \
+               build_faiss_index.slurm
+      args:
+        chdir: /home/almalinux/nfs/scripts
+      register: faiss_job
+
+    # output job submission result
+    - name: Print Faiss Slurm Job Submission Output
+      debug:
+        msg: "Submitted faiss array job: {{ faiss_job.stdout }}"

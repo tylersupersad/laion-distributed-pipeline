@@ -1,0 +1,41 @@
+- name: Submit CLIP Embedding Job on Host Node
+  hosts: hostnode
+  become: false
+
+  tasks:
+    # create log directories if they don't exist
+    - name: Ensure Logs Directories Exist
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - /home/almalinux/nfs/logs/embed
+        - /home/almalinux/nfs/logs/slurm
+
+    # count number of available parquet files in input directory
+    - name: Count Available Parquet Files
+      shell: "ls -1 /home/almalinux/nfs/laion/*.parquet 2>/dev/null | wc -l"
+      register: num_parquet
+
+    # exit early if no parquet files are present
+    - name: Fail If No Parquet Files Found
+      fail:
+        msg: "No parquet files found in /home/almalinux/nfs/laion"
+      when: num_parquet.stdout | int == 0
+
+    # submit slurm array job using dynamic array size and 4 concurrent tasks
+    - name: Submit Slurm Job with Dynamic Array Size
+      shell: |
+        sbatch --array=0-{{ num_parquet.stdout | int - 1 }}%4 \
+               --job-name=clip_embed_array \
+               embed_clip.slurm
+      args:
+        chdir: /home/almalinux/nfs/scripts
+      register: slurm_job
+
+    # print the job submission output
+    - name: Print Slurm Job Submission Output
+      debug:
+        msg: "Submitted slurm array job: {{ slurm_job.stdout }}"
+
