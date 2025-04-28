@@ -98,12 +98,12 @@ This document details the configuration and setup of a distributed cluster desig
     * **Access Prometheus UI:**
         Open http://localhost:9090 in your browser.
 
-    * **Ansible Automation Tasks:**
+* **Ansible Automation Tasks:**
 
-        * Install necessary Python packages and system dependencies.
-        * Configure NFS client based on node roles.
-        * Set up SLURM for job scheduling (controller and worker nodes).
-        * Prepare the environment for CLIP image embedding processing.
-        * Deploy Prometheus and Node Exporter for distributed system monitoring.
+    * Install necessary Python packages and system dependencies.
+    * Configure NFS client based on node roles.
+    * Set up SLURM for job scheduling (controller and worker nodes).
+    * Prepare the environment for CLIP image embedding processing.
+    * Deploy Prometheus and Node Exporter for distributed system monitoring.
 
 ---
