@@ -6,14 +6,16 @@ This document details the configuration and setup of a distributed cluster desig
 
 ## Cluster Architecture
 
-| Role          | Hostname      | Resources         | Purpose                                |
-|---------------|---------------|-------------------|----------------------------------------|
-| Head Node     | `hostnode`    | 2 CPUs, 4GB RAM   | SLURM controller, job submission       |
-| Worker Node 1 | `workernode1` | 4 CPUs, 32GB RAM  | Image embedding processing             |
-| Worker Node 2 | `workernode2` | 4 CPUs, 32GB RAM  | Image embedding processing             |
-| Worker Node 3 | `workernode3` | 4 CPUs, 32GB RAM  | Image embedding processing             |
-| Worker Node 4 | `workernode4` | 4 CPUs, 32GB RAM  | Image embedding processing             |
+| Role          | Hostname      | Resources         | IP Address    |
+|---------------|---------------|-------------------|---------------|
+| Head Node     | `hostnode`    | 2 CPUs, 4GB RAM   | 10.134.12.239 |
+| Worker Node 1 | `workernode1` | 4 CPUs, 32GB RAM  | 10.134.12.245 |
+| Worker Node 2 | `workernode2` | 4 CPUs, 32GB RAM  | 10.134.12.240 |
+| Worker Node 3 | `workernode3` | 4 CPUs, 32GB RAM  | 10.134.12.250 |
+| Worker Node 4 | `workernode4` | 4 CPUs, 32GB RAM  | 10.134.12.243 |
 
+> **Note:** The cluster deployment and configuration described above were initiated from the machine with IP address `10.134.12.252`.
+>
 > **Key Features:**
 >
 > * All nodes utilize shared storage via NFS client.
@@ -24,10 +26,17 @@ This document details the configuration and setup of a distributed cluster desig
 
 ## Repository Setup and Cluster Deployment
 
-1.  **Clone the Repository and Navigate to the Terraform Directory:**
-
+1.  **Prepare Environment:**
+    * Install Git (if not already installed):
     ```bash
-    git clone [https://github.com/tylersupersad/laion-distributed-pipeline.git](https://github.com/tylersupersad/laion-distributed-pipeline.git)
+    sudo dnf install git
+    ```
+    * Clone the Repository:
+    ```bash
+    git clone https://github.com/tylersupersad/laion-distributed-pipeline.git
+    ```
+    * Navigate to the `terraform` directory to initiate the provisioning of the cluster: 
+    ```bash
     cd laion-distributed-pipeline/infra/terraform
     ```
 
@@ -42,29 +51,59 @@ This document details the configuration and setup of a distributed cluster desig
     terraform apply
     ```
 
-    > This step will provision the virtual machines and network resources based on the configuration.
+**Notes:**
+
+> - Follow the prompts and type `yes` when asked for confirmation.
+> - This will automatically create all required virtual machines and network resources based on the Terraform files.
 
 4.  **Cluster Bootstrapping with Ansible:**
 
-    * **Prepare the Environment:**
-
+    * **Ensure generate_inventory.py is Executable:**
         ```bash
-        chmod +x ../generate_inventory.py
+        chmod +x generate_inventory.py
+        ```
+
+    * **Navigate to the `setup` Directory:**
+    ```bash
+        cd ../ansible/setup
+    ```
+
+    * **Prepare the Environment (HuggingFace Requires Token for Dataset Download):**
+        ```bash
         export HF_TOKEN=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
         ```
 
     * **Run the Ansible Playbook:**
-
         ```bash
-        cd ../ansible/setup
         ansible-playbook -i ../../terraform/generate_inventory.py full.yaml
         ```
+
+5.  **Configure Prometheus Monitoring:**
+
+    * **Navigate to the `monitoring` Directory:**
+        ```bash
+        cd ../monitoring
+        ```
+
+    * **Deploy Prometheus and Node Exporter with Ansible:**
+        ```bash
+        ansible-playbook -i ../../terraform/generate_inventory.py install_monitoring.yaml
+        ```
+
+    * **Port Forward Prometheus UI (example with Hostnode IP 10.134.12.239):**
+        ```bash
+        ssh -i %USERPROFILE%\.ssh\condenser -J condenser-proxy -L 9090:localhost:9090 almalinux@10.134.12.239
+        ```
+
+    * **Access Prometheus UI:**
+        Open http://localhost:9090 in your browser.
 
     * **Ansible Automation Tasks:**
 
         * Install necessary Python packages and system dependencies.
-        * Configure BeeGFS or NFS client based on node roles.
+        * Configure NFS client based on node roles.
         * Set up SLURM for job scheduling (controller and worker nodes).
         * Prepare the environment for CLIP image embedding processing.
+        * Deploy Prometheus and Node Exporter for distributed system monitoring.
 
 ---
