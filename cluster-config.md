@@ -31,7 +31,7 @@ This document details the configuration and setup of a distributed cluster desig
     ```bash
     sudo dnf install git
     ```
-    * Clone the Repository:
+    * Clone the repository:
     ```bash
     git clone https://github.com/tylersupersad/laion-distributed-pipeline.git
     ```
@@ -51,10 +51,10 @@ This document details the configuration and setup of a distributed cluster desig
     terraform apply
     ```
 
-**Notes:**
+    **Notes:**
 
-> - Follow the prompts and type `yes` when asked for confirmation.
-> - This will automatically create all required virtual machines and network resources based on the Terraform files.
+    > - Follow the prompts and type `yes` when asked for confirmation.
+    > - This will automatically create all required virtual machines and network resources based on the Terraform files.
 
 4.  **Cluster Bootstrapping with Ansible:**
 
@@ -64,9 +64,9 @@ This document details the configuration and setup of a distributed cluster desig
         ```
 
     * **Navigate to the `setup` Directory:**
-    ```bash
+        ```bash
         cd ../ansible/setup
-    ```
+        ```
 
     * **Prepare the Environment (HuggingFace Requires Token for Dataset Download):**
         ```bash
