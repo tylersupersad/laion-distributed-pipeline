@@ -37,7 +37,7 @@
     - name: Download LAION Dataset Files If Not Already Present
       run_once: true
       ansible.builtin.shell: |
-        for i in $(seq -w 0 27); do
+        for i in $(seq -w 0 5); do
           fname="part-000${i}-cad4a140-cebd-46fa-b874-e8968f93e32e-c000.snappy.parquet"
           url="https://huggingface.co/datasets/laion/laion2B-en-aesthetic/resolve/main/$fname"
           if [ ! -f "{{ laion_dir }}/$fname" ]; then
