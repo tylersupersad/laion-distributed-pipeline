@@ -34,7 +34,9 @@ This guide outlines the complete end-to-end usage of the distributed LAION embed
         ansible-playbook -i ../../terraform/generate_inventory.py run-embedding-job.yaml
         ```
 
-        > This will download the LAION dataset (parquet files) into `/home/almalinux/nfs/laion`.
+        > This will create the CLIP embeddings from the LAION dataset (parquet files) 
+        > inside of `/home/almalinux/nfs/laion`. Wait 10 - 15 minutes for this task to 
+        > complete (test run for examination).
 
     * **Run Distributed FAISS Indexing Jobs:**
 
@@ -43,7 +45,6 @@ This guide outlines the complete end-to-end usage of the distributed LAION embed
         ```
 
         > This step builds FAISS shards from the distributed CLIP embeddings.
-        > Wait 5 - 10 minutes for this task to complete (test run for examination).
 
     * **Merge FAISS Index Shards into a Unified Index:**
 
