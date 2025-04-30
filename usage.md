@@ -43,6 +43,7 @@ This guide outlines the complete end-to-end usage of the distributed LAION embed
         ```
 
         > This step builds FAISS shards from the distributed CLIP embeddings.
+        > Wait 5 - 10 minutes for this task to complete (test run for examination).
 
     * **Merge FAISS Index Shards into a Unified Index:**
 
